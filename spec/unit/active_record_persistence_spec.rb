@@ -1,8 +1,9 @@
-require File.join(File.dirname(__FILE__), '..', '..', 'lib', 'aasm')
-
 begin
   require 'rubygems'
   require 'active_record'
+  require 'logger'
+  
+  ActiveRecord::Base.logger = Logger.new(STDERR)
 
   # A dummy class for mocking the activerecord connection class
   class Connection
@@ -59,7 +60,7 @@ begin
     attr_accessor :skilled, :aasm_state
   end
 
-  describe "aasm model", :shared => true do
+  shared_examples_for "aasm model" do
     it "should include AASM::Persistence::ActiveRecordPersistence" do
       @klass.included_modules.should be_include(AASM::Persistence::ActiveRecordPersistence)
     end
@@ -214,16 +215,16 @@ begin
     end
 
     context "Does not already respond_to? the scope name" do
-      it "should add a named_scope" do
-        NamedScopeExample.should_receive(:named_scope)
+      it "should add a scope" do
         NamedScopeExample.aasm_state :unknown_scope
+        NamedScopeExample.scopes.keys.should include(:unknown_scope)
       end
     end
 
     context "Already respond_to? the scope name" do
-      it "should not add a named_scope" do
-        NamedScopeExample.should_not_receive(:named_scope)
+      it "should not add a scope" do
         NamedScopeExample.aasm_state :new
+        NamedScopeExample.scopes.keys.should_not include(:new)
       end
     end
   end
